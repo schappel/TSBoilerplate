@@ -16,11 +16,13 @@
 #import <Foundation/Foundation.h>
 #import "Command.h"
 #import "AsynchronousCommand.h"
+#import <objc/runtime.h>
 
 @interface TSCommandRunner : NSObject
 
 + (TSCommandRunner *)sharedCommandRunner;
 
++ (void)autoRegisterCommands;
 + (void)registerCommand:(Class)commandClass forKey:(NSString *)key;
 
 + (Command *)getCommand:(NSString *)key;
@@ -29,6 +31,7 @@
 + (void)executeCommand:(Command *)command;
 + (void)executeCommand:(Command *)command onQueue:(NSOperationQueue *)queue;
 
+- (void)autoRegisterCommands;
 - (void)registerCommand:(Class)commandClass forKey:(NSString *)key;
 - (Command *)getCommand:(NSString *)key;
 

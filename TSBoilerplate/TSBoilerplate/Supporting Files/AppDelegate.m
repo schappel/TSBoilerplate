@@ -47,10 +47,14 @@ static NSString* const kCmdTwitter = @"TwitterCommand";
     [Model resetModel];    // Just for testing
     
     // Setup the commands that are available in the factory
+    [TSCommandRunner autoRegisterCommands];
+    
+    /* OR register manually
     [TSCommandRunner registerCommand:[MemberDisplayCommand class] forKey:kCmdMemberDisplay];
     [TSCommandRunner registerCommand:[MemberCommand class] forKey:kCmdMember];
     [TSCommandRunner registerCommand:[GroupCommand class] forKey:kCmdGroup];
     [TSCommandRunner registerCommand:[TwitterCommand class] forKey:kCmdTwitter];
+    */
 
     // Setup the display of our member, note: the group is not known at this stage
     Command *memberDisplayCommand = [TSCommandRunner getCommand:kCmdMemberDisplay];
@@ -76,7 +80,7 @@ static NSString* const kCmdTwitter = @"TwitterCommand";
             // You can init all the params of the command when getting it
             Command *memberCommand = [TSCommandRunner getCommand:kCmdMember 
                                               withObjectsAndKeys:
-                                        @"saveModel", [NSNumber numberWithBool:YES],
+                                        [NSNumber numberWithBool:YES], @"saveModel", 
                                         [Model sharedModel].group.groupName, @"groupName",
                                         [NSString stringWithFormat:@"%@ %d", kMemberStartOfName, count], @"name",
                                         [NSNumber numberWithInteger:count], @"memberId",

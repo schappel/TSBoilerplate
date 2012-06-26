@@ -47,6 +47,11 @@
     return sharedOperationQueue;
 }
 
++ (void)autoRegisterCommands
+{
+    [[[self class] sharedCommandRunner] autoRegisterCommands];
+}
+
 + (void)registerCommand:(Class)commandClass forKey:(NSString *)key
 {
     [[[self class] sharedCommandRunner] registerCommand:commandClass forKey:key];
@@ -100,6 +105,49 @@
     return self;
 }
 
+- (BOOL)class:(Class)class isSubclassOfClass:(Class)superclass
+{
+    Class theSuperclass = class_getSuperclass(class);
+    while( theSuperclass ) {
+        if( theSuperclass == superclass ) return YES;
+        theSuperclass = class_getSuperclass(theSuperclass);
+    }
+    return NO;
+}
+
+- (void)autoRegisterCommands
+{
+    int numClasses = objc_getClassList( NULL, 0 );  // Pass NULL to get the number of classes
+    if( numClasses == 0 ) return;
+    
+    // Get the list of classes
+    Class *classes = (__unsafe_unretained Class *) malloc( sizeof(Class) * numClasses );   
+    numClasses = objc_getClassList( classes, numClasses );
+    
+    Class commandClass = [Command class];
+    Class asynchronousCommandClass = [AsynchronousCommand class];
+    NSArray *registeredCommandKeys = [registeredCommands allKeys];
+    
+    for( int i=0; i < numClasses; i++ )
+    {
+        Class theClass = classes[i];
+        
+        if( theClass == commandClass || theClass == asynchronousCommandClass ) continue;
+        
+        // If the class is a 'Command' class
+        if( [self class:theClass isSubclassOfClass:[Command class]] ) {
+            NSString *className = [NSString stringWithUTF8String:class_getName(theClass)];
+            // And the class's name is not already registered
+            if( ![registeredCommandKeys containsObject:className] )
+            {
+                // Register the command
+                [registeredCommands setValue:theClass forKey:className];
+            }
+        }
+    }
+    free( classes );
+}
+
 - (void)registerCommand:(Class)commandClass forKey:(NSString *)key
 {
     if( [[registeredCommands allKeys] containsObject:key] ) {
@@ -107,7 +155,7 @@
         return;
     }
     
-    if( ![commandClass isSubclassOfClass:[Command class]] ) {
+    if( ![self class:commandClass isSubclassOfClass:[Command class]] ) {
         [NSException raise:NSInvalidArgumentException format:@"can only register Command classes"];
         return;
     }
